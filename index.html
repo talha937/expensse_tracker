@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Motion One - Vanilla JS animation library -->
+    <script src="https://cdn.jsdelivr.net/npm/motion@10.16.2/dist/motion.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f4f8',
+                            100: '#d9e2ec',
+                            200: '#bcccdc',
+                            300: '#9fb3c8',
+                            400: '#829ab1',
+                            500: '#627d98',
+                            600: '#486581',
+                            700: '#334e68',
+                            800: '#243b53',
+                            900: '#102a43',
+                        },
+                        accent: {
+                            50: '#e6fffa',
+                            100: '#b2f5ea',
+                            200: '#81e6d9',
+                            300: '#4fd1c5',
+                            400: '#38b2ac',
+                            500: '#319795',
+                            600: '#2c7a7b',
+                            700: '#285e61',
+                            800: '#234e52',
+                            900: '#1d4044',
+                        },
+                        warm: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f9a8d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                        },
+                        slate: {
+                            850: '#1a2332',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom smooth transitions */
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .expense-item {
+            transition: all 0.2s ease-out;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #334e68 0%, #243b53 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #243b53 0%, #102a43 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(36, 59, 83, 0.4);
+        }
+        .gradient-header {
+            background: linear-gradient(135deg, #102a43 0%, #243b53 50%, #334e68 100%);
+        }
+        .stat-card-1 {
+            background: linear-gradient(135deg, #102a43 0%, #1a365d 100%);
+        }
+        .stat-card-2 {
+            background: linear-gradient(135deg, #234e52 0%, #285e61 100%);
+        }
+        .stat-card-3 {
+            background: linear-gradient(135deg, #44337a 0%, #553c9a 100%);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-100 via-gray-100 to-slate-200 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <header id="header" class="text-center mb-10 py-8">
+            <h1 class="text-5xl font-bold bg-gradient-to-r from-primary-800 via-primary-700 to-accent-600 bg-clip-text text-transparent mb-3">
+                Expense Tracker
+            </h1>
+            <p class="text-primary-500 text-lg font-medium">Track your spending and manage your budget with ease</p>
+        </header>
+
+        <!-- Summary Cards -->
+        <div id="summaryCards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="stat-card-1 rounded-2xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-slate-300 uppercase tracking-wider">Total Expenses</h3>
+                        <p id="totalExpenses" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                        <span class="text-2xl">💳</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card-2 rounded-2xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-teal-200 uppercase tracking-wider">This Month</h3>
+                        <p id="monthlyExpenses" class="text-3xl font-bold text-white mt-2">$0.00</p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                        <span class="text-2xl">📅</span>
+                    </div>
+                </div>
+            </div>
+            <div class="stat-card-3 rounded-2xl shadow-lg p-6 card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-sm font-medium text-purple-200 uppercase tracking-wider">Transactions</h3>
+                        <p id="transactionCount" class="text-3xl font-bold text-white mt-2">0</p>
+                    </div>
+                    <div class="w-12 h-12 bg-white/10 rounded-xl flex items-center justify-center">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Form -->
+        <div id="formCard" class="glass-effect rounded-2xl shadow-lg p-8 mb-10 border border-slate-200/50">
+            <h2 class="text-2xl font-semibold text-primary-800 mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
+                    <span class="text-xl">➕</span>
+                </span>
+                Add New Expense
+            </h2>
+            <form id="expenseForm" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="title" class="block text-sm font-semibold text-primary-700 mb-2">Title</label>
+                        <input type="text" id="title" name="title" required
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white"
+                            placeholder="Enter expense title">
+                    </div>
+                    <div>
+                        <label for="amount" class="block text-sm font-semibold text-primary-700 mb-2">Amount ($)</label>
+                        <input type="number" id="amount" name="amount" step="0.01" min="0.01" required
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white"
+                            placeholder="0.00">
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-semibold text-primary-700 mb-2">Category</label>
+                        <select id="category" name="category"
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white">
+                            <option value="food">🍔 Food</option>
+                            <option value="transportation">🚗 Transportation</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="utilities">💡 Utilities</option>
+                            <option value="shopping">🛒 Shopping</option>
+                            <option value="health">🏥 Health</option>
+                            <option value="education">📚 Education</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="date" class="block text-sm font-semibold text-primary-700 mb-2">Date</label>
+                        <input type="datetime-local" id="date" name="date"
+                            class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white">
+                    </div>
+                </div>
+                <div>
+                    <label for="description" class="block text-sm font-semibold text-primary-700 mb-2">Description (Optional)</label>
+                    <textarea id="description" name="description" rows="2"
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white resize-none"
+                        placeholder="Add a description..."></textarea>
+                </div>
+                <button type="submit"
+                    class="w-full btn-primary text-white py-3 px-6 rounded-xl font-semibold text-lg shadow-md">
+                    Add Expense
+                </button>
+            </form>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="glass-effect rounded-2xl shadow-lg p-5 mb-6 border border-slate-200/50">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 bg-primary-100 rounded-lg flex items-center justify-center">
+                        <span class="text-sm">🔍</span>
+                    </span>
+                    <label for="filterCategory" class="text-sm font-semibold text-primary-700">Filter by:</label>
+                    <select id="filterCategory"
+                        class="px-4 py-2 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white font-medium text-primary-700">
+                        <option value="">All Categories</option>
+                        <option value="food">🍔 Food</option>
+                        <option value="transportation">🚗 Transportation</option>
+                        <option value="entertainment">🎬 Entertainment</option>
+                        <option value="utilities">💡 Utilities</option>
+                        <option value="shopping">🛒 Shopping</option>
+                        <option value="health">🏥 Health</option>
+                        <option value="education">📚 Education</option>
+                        <option value="other">📦 Other</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses List -->
+        <div id="expensesCard" class="glass-effect rounded-2xl shadow-lg overflow-hidden border border-slate-200/50">
+            <div class="p-6 border-b border-slate-200 bg-gradient-to-r from-primary-50 to-accent-50">
+                <h2 class="text-xl font-semibold text-primary-800 flex items-center gap-3">
+                    <span class="w-8 h-8 bg-primary-200 rounded-lg flex items-center justify-center">
+                        <span class="text-sm">📋</span>
+                    </span>
+                    Recent Expenses
+                </h2>
+            </div>
+            <div id="expensesList" class="divide-y divide-slate-100">
+                <!-- Expenses will be loaded here -->
+                <div class="p-10 text-center text-primary-400">
+                    <div class="animate-pulse">Loading expenses...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="fixed inset-0 bg-primary-900/60 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl shadow-2xl p-8 w-full max-w-md mx-4 border border-slate-200/50">
+            <h3 class="text-2xl font-semibold text-primary-800 mb-6 flex items-center gap-3">
+                <span class="w-10 h-10 bg-accent-100 rounded-xl flex items-center justify-center">
+                    <span class="text-xl">✏️</span>
+                </span>
+                Edit Expense
+            </h3>
+            <form id="editForm" class="space-y-5">
+                <input type="hidden" id="editId">
+                <div>
+                    <label for="editTitle" class="block text-sm font-semibold text-primary-700 mb-2">Title</label>
+                    <input type="text" id="editTitle" required
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white">
+                </div>
+                <div>
+                    <label for="editAmount" class="block text-sm font-semibold text-primary-700 mb-2">Amount ($)</label>
+                    <input type="number" id="editAmount" step="0.01" min="0.01" required
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white">
+                </div>
+                <div>
+                    <label for="editCategory" class="block text-sm font-semibold text-primary-700 mb-2">Category</label>
+                    <select id="editCategory"
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white">
+                        <option value="food">🍔 Food</option>
+                        <option value="transportation">🚗 Transportation</option>
+                        <option value="entertainment">🎬 Entertainment</option>
+                        <option value="utilities">💡 Utilities</option>
+                        <option value="shopping">🛒 Shopping</option>
+                        <option value="health">🏥 Health</option>
+                        <option value="education">📚 Education</option>
+                        <option value="other">📦 Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="editDescription" class="block text-sm font-semibold text-primary-700 mb-2">Description</label>
+                    <textarea id="editDescription" rows="2"
+                        class="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-accent-400 focus:border-accent-400 transition-all duration-200 bg-white resize-none"></textarea>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="submit"
+                        class="flex-1 btn-primary text-white py-3 px-4 rounded-xl font-semibold shadow-md">
+                        Save Changes
+                    </button>
+                    <button type="button" onclick="closeEditModal()"
+                        class="flex-1 bg-slate-200 text-primary-700 py-3 px-4 rounded-xl font-semibold hover:bg-slate-300 transition-all duration-200">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/expenses';
+        const { animate, stagger, spring } = Motion;
+        
+        // Category emoji mapping
+        const categoryEmojis = {
+            'food': '🍔',
+            'transportation': '🚗',
+            'entertainment': '🎬',
+            'utilities': '💡',
+            'shopping': '🛒',
+            'health': '🏥',
+            'education': '📚',
+            'other': '📦'
+        };
+
+        // Category colors for professional look
+        const categoryColors = {
+            'food': 'bg-amber-100 text-amber-700 border-amber-200',
+            'transportation': 'bg-blue-100 text-blue-700 border-blue-200',
+            'entertainment': 'bg-pink-100 text-pink-700 border-pink-200',
+            'utilities': 'bg-yellow-100 text-yellow-700 border-yellow-200',
+            'shopping': 'bg-emerald-100 text-emerald-700 border-emerald-200',
+            'health': 'bg-red-100 text-red-700 border-red-200',
+            'education': 'bg-indigo-100 text-indigo-700 border-indigo-200',
+            'other': 'bg-slate-100 text-slate-700 border-slate-200'
+        };
+
+        // Initialize with animations
+        document.addEventListener('DOMContentLoaded', () => {
+            // Animate header
+            animate('#header', 
+                { opacity: [0, 1], y: [-30, 0] }, 
+                { duration: 0.6, easing: [0.22, 1, 0.36, 1] }
+            );
+
+            // Animate summary cards with stagger
+            animate('#summaryCards > div', 
+                { opacity: [0, 1], y: [40, 0], scale: [0.9, 1] }, 
+                { duration: 0.5, delay: stagger(0.1, { start: 0.2 }), easing: [0.22, 1, 0.36, 1] }
+            );
+
+            // Animate form card
+            animate('#formCard', 
+                { opacity: [0, 1], y: [30, 0] }, 
+                { duration: 0.5, delay: 0.5, easing: [0.22, 1, 0.36, 1] }
+            );
+
+            // Animate expenses card
+            animate('#expensesCard', 
+                { opacity: [0, 1], y: [30, 0] }, 
+                { duration: 0.5, delay: 0.6, easing: [0.22, 1, 0.36, 1] }
+            );
+
+            loadExpenses();
+            loadSummary();
+            
+            // Set default date to now
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('date').value = now.toISOString().slice(0, 16);
+        });
+
+        // Load expenses
+        async function loadExpenses(category = '') {
+            try {
+                let url = API_URL;
+                if (category) {
+                    url += `?category=${category}`;
+                }
+                const response = await fetch(url);
+                const expenses = await response.json();
+                renderExpenses(expenses);
+            } catch (error) {
+                console.error('Error loading expenses:', error);
+            }
+        }
+
+        // Load summary
+        async function loadSummary() {
+            try {
+                const response = await fetch(`${API_URL}/summary`);
+                const summary = await response.json();
+                
+                // Animate number updates
+                animateValue('totalExpenses', summary.total_expenses);
+                animateValue('monthlyExpenses', summary.total_expenses);
+                document.getElementById('transactionCount').textContent = summary.expense_count;
+            } catch (error) {
+                console.error('Error loading summary:', error);
+            }
+        }
+
+        // Animate value change
+        function animateValue(elementId, endValue) {
+            const element = document.getElementById(elementId);
+            element.textContent = `$${endValue.toFixed(2)}`;
+            animate(element, { scale: [1.1, 1] }, { duration: 0.3, easing: spring() });
+        }
+
+        // Render expenses list with animations
+        function renderExpenses(expenses) {
+            const container = document.getElementById('expensesList');
+            
+            if (expenses.length === 0) {
+                container.innerHTML = `
+                    <div class="p-12 text-center">
+                        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="text-4xl">📝</span>
+                        </div>
+                        <p class="text-lg font-medium text-primary-600">No expenses yet</p>
+                        <p class="text-sm text-primary-400 mt-1">Add your first expense above!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = expenses.map((expense, index) => `
+                <div class="expense-item p-5 hover:bg-slate-50/80 transition-all duration-200" data-index="${index}">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-12 h-12 ${categoryColors[expense.category]?.split(' ')[0] || 'bg-slate-100'} rounded-xl flex items-center justify-center shadow-sm">
+                                <span class="text-xl">${categoryEmojis[expense.category] || '📦'}</span>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-primary-800">${escapeHtml(expense.title)}</h4>
+                                <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-medium px-2 py-1 rounded-full border ${categoryColors[expense.category] || 'bg-slate-100 text-slate-700 border-slate-200'}">
+                                        ${expense.category}
+                                    </span>
+                                    <span class="text-xs text-primary-400">•</span>
+                                    <span class="text-xs text-primary-400">${formatDate(expense.date)}</span>
+                                </div>
+                                ${expense.description ? `<p class="text-sm text-primary-400 mt-2">${escapeHtml(expense.description)}</p>` : ''}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-xl font-bold text-primary-700">$${expense.amount.toFixed(2)}</span>
+                            <div class="flex space-x-1">
+                                <button onclick="openEditModal(${expense.id})"
+                                    class="w-9 h-9 rounded-lg bg-accent-50 hover:bg-accent-100 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                                    <span class="text-sm">✏️</span>
+                                </button>
+                                <button onclick="deleteExpense(${expense.id})"
+                                    class="w-9 h-9 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-all duration-200 hover:scale-110">
+                                    <span class="text-sm">🗑️</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Animate expense items
+            setTimeout(() => {
+                animate('.expense-item', 
+                    { opacity: [0, 1], x: [-20, 0] }, 
+                    { duration: 0.4, delay: stagger(0.05), easing: [0.22, 1, 0.36, 1] }
+                );
+            }, 50);
+        }
+
+        // Add expense with animation
+        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            animate(submitBtn, { scale: [1, 0.95, 1] }, { duration: 0.2 });
+            
+            const formData = {
+                title: document.getElementById('title').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                category: document.getElementById('category').value,
+                description: document.getElementById('description').value || null,
+                date: document.getElementById('date').value ? new Date(document.getElementById('date').value).toISOString() : null
+            };
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    // Success animation
+                    animate('#formCard', { scale: [1, 1.02, 1] }, { duration: 0.3, easing: spring() });
+                    
+                    e.target.reset();
+                    // Reset date to now
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    document.getElementById('date').value = now.toISOString().slice(0, 16);
+                    
+                    loadExpenses();
+                    loadSummary();
+                }
+            } catch (error) {
+                console.error('Error adding expense:', error);
+            } finally {
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Delete expense with animation
+        async function deleteExpense(id) {
+            if (!confirm('Are you sure you want to delete this expense?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                if (response.ok) {
+                    loadExpenses();
+                    loadSummary();
+                }
+            } catch (error) {
+                console.error('Error deleting expense:', error);
+            }
+        }
+
+        // Edit modal functions with animations
+        async function openEditModal(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                const expense = await response.json();
+
+                document.getElementById('editId').value = expense.id;
+                document.getElementById('editTitle').value = expense.title;
+                document.getElementById('editAmount').value = expense.amount;
+                document.getElementById('editCategory').value = expense.category;
+                document.getElementById('editDescription').value = expense.description || '';
+
+                const modal = document.getElementById('editModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                // Animate modal appearance
+                animate('#editModal > div', 
+                    { opacity: [0, 1], scale: [0.9, 1], y: [20, 0] }, 
+                    { duration: 0.3, easing: [0.22, 1, 0.36, 1] }
+                );
+            } catch (error) {
+                console.error('Error loading expense:', error);
+            }
+        }
+
+        async function closeEditModal() {
+            const modalContent = document.querySelector('#editModal > div');
+            await animate(modalContent, 
+                { opacity: [1, 0], scale: [1, 0.9], y: [0, 20] }, 
+                { duration: 0.2, easing: [0.22, 1, 0.36, 1] }
+            ).finished;
+            
+            document.getElementById('editModal').classList.add('hidden');
+            document.getElementById('editModal').classList.remove('flex');
+        }
+
+        document.getElementById('editForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('editId').value;
+            const formData = {
+                title: document.getElementById('editTitle').value,
+                amount: parseFloat(document.getElementById('editAmount').value),
+                category: document.getElementById('editCategory').value,
+                description: document.getElementById('editDescription').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    closeEditModal();
+                    loadExpenses();
+                    loadSummary();
+                }
+            } catch (error) {
+                console.error('Error updating expense:', error);
+            }
+        });
+
+        // Filter by category
+        document.getElementById('filterCategory').addEventListener('change', (e) => {
+            loadExpenses(e.target.value);
+        });
+
+        // Utility functions
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Close modal on outside click
+        document.getElementById('editModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('editModal')) {
+                closeEditModal();
+            }
+        });
+    </script>
+</body>
+</html>

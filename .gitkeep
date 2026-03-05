@@ -1,0 +1,2 @@
+# This directory is for static files (CSS, JS, images)
+# Tailwind CSS is loaded via CDN in the HTML template
